@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
 import { getDocumentById } from "../documents/registry";
+import { formatFieldInput } from "../documents/utils/formatters";
+import { saveDocumentDraft } from "../documents/utils/drafts";
 import { validateStep } from "../documents/validation/validateField";
 
 const getTodayIso = () => {
@@ -11,20 +13,49 @@ const getTodayIso = () => {
   return `${year}-${month}-${day}`;
 };
 
-export default function DocumentWizard({ documentType, initialData, onBack, onComplete }) {
-  const [currentStep, setCurrentStep] = useState(0);
+const formatSavedTime = (timestamp) => {
+  if (!timestamp) {
+    return "";
+  }
+  return new Date(timestamp).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+};
+
+export default function DocumentWizard({
+  documentType,
+  initialData,
+  initialStep = 0,
+  onBack,
+  onComplete,
+}) {
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [formData, setFormData] = useState(initialData);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorDetail, setErrorDetail] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [lastDraftSavedAt, setLastDraftSavedAt] = useState(0);
 
   const definition = getDocumentById(documentType);
   const steps = definition?.steps ?? [];
   const step = steps[currentStep];
 
   useEffect(() => {
-    setCurrentStep(0);
-    setErrorMessage("");
+    setCurrentStep(initialStep);
+    setErrorDetail(null);
+    setFieldErrors({});
     setFormData(initialData);
-  }, [initialData]);
+  }, [initialData, initialStep]);
+
+  useEffect(() => {
+    if (!documentType) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      saveDocumentDraft(documentType, formData, currentStep);
+      setLastDraftSavedAt(Date.now());
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [currentStep, documentType, formData]);
 
   const progress = useMemo(
     () => (steps.length > 0 ? Math.round(((currentStep + 1) / steps.length) * 100) : 0),
@@ -36,13 +67,21 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
       return false;
     }
 
-    const validationMessage = validateStep(step, formData);
-    if (validationMessage) {
-      setErrorMessage(validationMessage);
+    const result = validateStep(step, formData);
+    if (!result.isValid) {
+      setFieldErrors(result.fieldErrors);
+      setErrorDetail(result.firstError);
+      if (result.firstError?.fieldKey) {
+        const target = document.getElementById(result.firstError.fieldKey);
+        if (target) {
+          target.focus();
+        }
+      }
       return false;
     }
 
-    setErrorMessage("");
+    setFieldErrors({});
+    setErrorDetail(null);
     return true;
   };
 
@@ -60,7 +99,8 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
   };
 
   const handlePrev = () => {
-    setErrorMessage("");
+    setErrorDetail(null);
+    setFieldErrors({});
     if (currentStep === 0) {
       onBack();
       return;
@@ -68,8 +108,17 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
     setCurrentStep((prev) => prev - 1);
   };
 
-  const updateField = (key, value) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+  const updateField = (field, value) => {
+    const nextValue = formatFieldInput(field, value);
+    setFormData((prev) => ({ ...prev, [field.key]: nextValue }));
+    setFieldErrors((prev) => {
+      if (!prev[field.key]) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[field.key];
+      return next;
+    });
   };
 
   if (!step || !definition) {
@@ -112,6 +161,9 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
             style={{ width: `${progress}%` }}
           />
         </div>
+        {lastDraftSavedAt ? (
+          <p className="mt-2 text-[11px] font-medium text-slate-500">초안 자동 저장: {formatSavedTime(lastDraftSavedAt)}</p>
+        ) : null}
       </div>
 
       <div key={step.id} className="animate-step-in">
@@ -122,51 +174,66 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
           {step.helperText ? <p className="mt-2 text-sm text-slate-500">{step.helperText}</p> : null}
 
           <div className="mt-6 space-y-4">
-            {step.fields.map((field) => (
-              <div key={field.key} className="block">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <label htmlFor={field.key} className="block text-sm font-medium text-slate-700">
-                    {field.label}
-                  </label>
-                  {field.type === "date" ? (
-                    <button
-                      type="button"
-                      onClick={() => updateField(field.key, getTodayIso())}
-                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand-700"
-                    >
-                      오늘 날짜
-                    </button>
+            {step.fields.map((field) => {
+              const fieldError = fieldErrors[field.key];
+              return (
+                <div key={field.key} className="block">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label htmlFor={field.key} className="block text-sm font-medium text-slate-700">
+                      {field.label}
+                    </label>
+                    {field.type === "date" ? (
+                      <button
+                        type="button"
+                        onClick={() => updateField(field, getTodayIso())}
+                        className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand-700"
+                      >
+                        오늘 날짜
+                      </button>
+                    ) : null}
+                  </div>
+                  {field.type === "textarea" ? (
+                    <textarea
+                      id={field.key}
+                      value={formData[field.key] ?? ""}
+                      placeholder={field.placeholder}
+                      rows={4}
+                      onChange={(event) => updateField(field, event.target.value)}
+                      className={`w-full resize-none rounded-2xl border bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:bg-white ${
+                        fieldError ? "border-red-300 focus:border-red-400" : "border-slate-200 focus:border-brand-300"
+                      }`}
+                    />
+                  ) : (
+                    <input
+                      id={field.key}
+                      type={field.type}
+                      value={formData[field.key] ?? ""}
+                      placeholder={field.placeholder}
+                      onChange={(event) => updateField(field, event.target.value)}
+                      className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:bg-white ${
+                        fieldError ? "border-red-300 focus:border-red-400" : "border-slate-200 focus:border-brand-300"
+                      }`}
+                    />
+                  )}
+                  {fieldError ? (
+                    <p className="mt-1 text-xs text-red-500">
+                      {fieldError.message}
+                      {fieldError.hint ? ` · ${fieldError.hint}` : ""}
+                      {fieldError.example ? ` (${fieldError.example})` : ""}
+                    </p>
                   ) : null}
                 </div>
-                {field.type === "textarea" ? (
-                  <textarea
-                    id={field.key}
-                    value={formData[field.key] ?? ""}
-                    placeholder={field.placeholder}
-                    rows={4}
-                    onChange={(event) => updateField(field.key, event.target.value)}
-                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:border-brand-300 focus:bg-white"
-                  />
-                ) : (
-                  <input
-                    id={field.key}
-                    type={field.type}
-                    value={formData[field.key] ?? ""}
-                    placeholder={field.placeholder}
-                    onChange={(event) => updateField(field.key, event.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:border-brand-300 focus:bg-white"
-                  />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {errorMessage ? (
+      {errorDetail ? (
         <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-red-500">
           <CircleAlert size={15} />
-          {errorMessage}
+          {errorDetail.message}
+          {errorDetail.hint ? ` - ${errorDetail.hint}` : ""}
         </p>
       ) : null}
 
@@ -181,3 +248,4 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
     </section>
   );
 }
+

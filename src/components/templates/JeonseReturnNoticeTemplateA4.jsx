@@ -8,7 +8,7 @@ export default function JeonseReturnNoticeTemplateA4({ data, today }) {
   return (
     <article
       id="pdf-document"
-      className="aspect-[210/297] w-full rounded-3xl border border-slate-300 bg-white p-6 text-[12px] leading-relaxed text-slate-900 shadow-soft sm:p-8"
+      className="a4-document w-full rounded-3xl border border-slate-300 bg-white p-6 text-[12px] leading-relaxed text-slate-900 shadow-soft sm:p-8"
     >
       <header className="border-[1.5px] border-slate-900 px-5 py-4 text-center">
         <p className="text-[11px] tracking-[0.2em] text-slate-600">DOCAI CERTIFIED FORMAT</p>
@@ -16,7 +16,7 @@ export default function JeonseReturnNoticeTemplateA4({ data, today }) {
         <p className="mt-1 text-[12px] font-medium text-slate-700">(전세보증금 반환 청구)</p>
       </header>
 
-      <section className="mt-4 border-[1.5px] border-slate-900">
+      <section className="mt-4 break-inside-avoid border-[1.5px] border-slate-900">
         <table className="w-full border-collapse text-[11.5px]">
           <tbody>
             <tr className="border-b border-slate-900">
@@ -39,7 +39,7 @@ export default function JeonseReturnNoticeTemplateA4({ data, today }) {
         </table>
       </section>
 
-      <section className="mt-4 border-[1.5px] border-slate-900">
+      <section className="mt-4 break-inside-avoid border-[1.5px] border-slate-900">
         <div className="border-b border-slate-900 bg-slate-100 px-3 py-2 text-[11.5px] font-semibold">
           청구 취지
         </div>
@@ -58,7 +58,7 @@ export default function JeonseReturnNoticeTemplateA4({ data, today }) {
         </div>
       </section>
 
-      <section className="mt-4 border-[1.5px] border-slate-900">
+      <section className="mt-4 break-inside-avoid border-[1.5px] border-slate-900">
         <div className="border-b border-slate-900 bg-slate-100 px-3 py-2 text-[11.5px] font-semibold">
           안내 사항
         </div>
@@ -69,11 +69,10 @@ export default function JeonseReturnNoticeTemplateA4({ data, today }) {
         </div>
       </section>
 
-      <section className="mt-6 border-[1.5px] border-slate-900 px-4 py-4 text-[11px] text-right">
+      <section className="mt-6 break-inside-avoid border-[1.5px] border-slate-900 px-4 py-4 text-[11px] text-right">
         <p>{today}</p>
         <p className="mt-3 font-semibold">발신인: {data.senderName} (인)</p>
       </section>
     </article>
   );
 }
-

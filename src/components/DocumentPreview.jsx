@@ -25,7 +25,7 @@ function FailedPreviewCard({ message }) {
   );
 }
 
-export default function DocumentPreview({ documentType, data, onEdit, onHome }) {
+export default function DocumentPreview({ documentType, data, onEdit, onHome, onDownload }) {
   const [isSaving, setIsSaving] = useState(false);
   const [TemplateComponent, setTemplateComponent] = useState(null);
   const [templateError, setTemplateError] = useState("");
@@ -81,8 +81,10 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome }) 
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"] },
         })
         .save();
+      onDownload?.();
     } finally {
       setIsSaving(false);
     }
@@ -97,6 +99,11 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome }) 
         </p>
         <p className="mt-1 text-sm font-semibold text-slate-700">{definition?.title ?? "문서"}</p>
         <p className="mt-1 text-sm text-slate-600">아래 미리보기를 확인한 뒤 PDF로 저장하세요.</p>
+        {definition?.legalInfo ? (
+          <p className="mt-1 text-[11px] text-slate-500">
+            법률 문구 기준: {definition.legalInfo.version} / {definition.legalInfo.updatedAt}
+          </p>
+        ) : null}
       </div>
 
       {!templateError && TemplateComponent ? (

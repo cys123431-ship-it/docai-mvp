@@ -47,9 +47,24 @@ const TEMPLATE_LOADERS = {
   nda: () => import("../components/templates/NonDisclosureAgreementTemplateA4"),
 };
 
+const DEFAULT_LEGAL_INFO = {
+  version: "v2026.02",
+  updatedAt: "2026-02-22",
+};
+
+const LEGAL_INFO_MAP = {
+  "jeonse-return": { version: "v2026.02-LEASE", updatedAt: "2026-02-22" },
+  "standard-labor-contract": { version: "v2026.02-LABOR", updatedAt: "2026-02-22" },
+  resignation: { version: "v2026.02-LABOR", updatedAt: "2026-02-22" },
+  "wage-arrears-notice": { version: "v2026.02-LABOR", updatedAt: "2026-02-22" },
+  "payment-order-application": { version: "v2026.02-COURT", updatedAt: "2026-02-22" },
+  nda: { version: "v2026.02-CONTRACT", updatedAt: "2026-02-22" },
+};
+
 const DOCUMENTS = DOCUMENT_ORDER.map((id) => ({
   ...documentQuestions[id],
   loadTemplate: TEMPLATE_LOADERS[id],
+  legalInfo: LEGAL_INFO_MAP[id] ?? DEFAULT_LEGAL_INFO,
 }));
 
 const DOCUMENT_MAP = Object.fromEntries(DOCUMENTS.map((document) => [document.id, document]));
@@ -62,4 +77,3 @@ export const getInitialDataForDocument = (documentType) => {
   const definition = getDocumentById(documentType);
   return buildInitialDataFromDefinition(definition);
 };
-
