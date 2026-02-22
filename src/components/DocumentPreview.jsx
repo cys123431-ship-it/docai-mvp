@@ -77,7 +77,7 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome }) 
         .from(target)
         .set({
           margin: [8, 8, 8, 8],
-          filename: `${definition?.pdfFilePrefix ?? "DocAI_문서"}_${new Date().getTime()}.pdf`,
+          filename: `${definition?.pdfFilePrefix ?? "DocAI_문서"}_${Date.now()}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },

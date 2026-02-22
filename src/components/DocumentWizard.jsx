@@ -3,6 +3,14 @@ import { ArrowLeft, ArrowRight, CircleAlert } from "lucide-react";
 import { getDocumentById } from "../documents/registry";
 import { validateStep } from "../documents/validation/validateField";
 
+const getTodayIso = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function DocumentWizard({ documentType, initialData, onBack, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState(initialData);
@@ -16,7 +24,7 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
     setCurrentStep(0);
     setErrorMessage("");
     setFormData(initialData);
-  }, [documentType, initialData]);
+  }, [initialData]);
 
   const progress = useMemo(
     () => (steps.length > 0 ? Math.round(((currentStep + 1) / steps.length) * 100) : 0),
@@ -115,10 +123,24 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
 
           <div className="mt-6 space-y-4">
             {step.fields.map((field) => (
-              <label key={field.key} className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">{field.label}</span>
+              <div key={field.key} className="block">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <label htmlFor={field.key} className="block text-sm font-medium text-slate-700">
+                    {field.label}
+                  </label>
+                  {field.type === "date" ? (
+                    <button
+                      type="button"
+                      onClick={() => updateField(field.key, getTodayIso())}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-brand-300 hover:text-brand-700"
+                    >
+                      오늘 날짜
+                    </button>
+                  ) : null}
+                </div>
                 {field.type === "textarea" ? (
                   <textarea
+                    id={field.key}
                     value={formData[field.key] ?? ""}
                     placeholder={field.placeholder}
                     rows={4}
@@ -127,6 +149,7 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
                   />
                 ) : (
                   <input
+                    id={field.key}
                     type={field.type}
                     value={formData[field.key] ?? ""}
                     placeholder={field.placeholder}
@@ -134,7 +157,7 @@ export default function DocumentWizard({ documentType, initialData, onBack, onCo
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] outline-none transition focus:border-brand-300 focus:bg-white"
                   />
                 )}
-              </label>
+              </div>
             ))}
           </div>
         </div>
