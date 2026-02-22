@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BriefcaseBusiness, ChevronRight, FileText, PenLine, Search, X } from "lucide-react";
 import { DOCUMENT_LIST } from "../documents/registry";
 
@@ -32,6 +32,7 @@ const DOCUMENT_ALIAS_MAP = {
 };
 
 const normalizeText = (value) => value.toLowerCase().replace(/\s+/g, "");
+const ITEMS_PER_PAGE = 5;
 
 const tokenize = (value) =>
   value
@@ -60,11 +61,32 @@ export default function Home({
   onResetCommonProfile,
 }) {
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const filteredDocuments = useMemo(() => {
     const tokens = tokenize(query);
     return DOCUMENT_LIST.filter((item) => matchesDocument(item, tokens));
   }, [query]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+
+  const pagedDocuments = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredDocuments.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, filteredDocuments]);
+
+  const pageNumbers = useMemo(() => Array.from({ length: totalPages }, (_, index) => index + 1), [totalPages]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   return (
     <section className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col px-5 pb-10 pt-8">
@@ -166,7 +188,7 @@ export default function Home({
             <p className="mt-1 text-xs text-slate-500">다른 단어로 검색하거나 전체 목록을 확인해주세요.</p>
           </div>
         ) : (
-          filteredDocuments.map((item) => {
+          pagedDocuments.map((item) => {
             const Icon = ICON_MAP[item.icon] ?? FileText;
 
             return (
@@ -195,7 +217,25 @@ export default function Home({
           })
         )}
       </div>
+
+      {filteredDocuments.length > 0 && totalPages > 1 ? (
+        <div className="mt-6 flex items-center justify-center gap-2">
+          {pageNumbers.map((pageNumber) => (
+            <button
+              key={pageNumber}
+              type="button"
+              onClick={() => setPage(pageNumber)}
+              className={`h-9 min-w-9 rounded-xl border px-3 text-sm font-semibold transition ${
+                pageNumber === currentPage
+                  ? "border-brand-500 bg-brand-500 text-white"
+                  : "border-slate-200 bg-white text-slate-600"
+              }`}
+            >
+              {pageNumber}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }
-
