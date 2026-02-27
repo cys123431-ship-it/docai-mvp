@@ -242,10 +242,9 @@ export default function DocumentWizard({
         onClick={handleNext}
         className="mt-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-5 py-4 text-base font-semibold text-white shadow-soft transition active:scale-[0.99]"
       >
-        {currentStep === steps.length - 1 ? "미리보기 보기" : "다음"}
+        {currentStep === steps.length - 1 ? "미리보기" : "다음"}
         <ArrowRight size={18} />
       </button>
     </section>
   );
 }
-
