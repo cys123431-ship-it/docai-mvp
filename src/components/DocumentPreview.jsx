@@ -107,7 +107,7 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome, on
       </div>
 
       {!templateError && TemplateComponent ? (
-        <TemplateComponent data={data} today={today} />
+        <TemplateComponent documentType={documentType} data={data} today={today} />
       ) : templateError ? (
         <FailedPreviewCard message={templateError} />
       ) : (

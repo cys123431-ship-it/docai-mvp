@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Home from "./components/Home";
 import DocumentWizard from "./components/DocumentWizard";
 import DocumentPreview from "./components/DocumentPreview";
@@ -57,6 +57,7 @@ export default function App() {
   const [commonProfileState, setCommonProfileState] = useState(() => loadCommonProfileStateFromStorage());
   const [documentPreferences, setDocumentPreferences] = useState(() => loadDocumentPreferences());
   const [usageMetrics, setUsageMetrics] = useState(() => loadUsageMetrics());
+  const initializedFromQueryRef = useRef(false);
 
   const activeProfile = useMemo(() => getActiveCommonProfile(commonProfileState), [commonProfileState]);
 
@@ -202,6 +203,25 @@ export default function App() {
   const handleToggleFavoriteDocument = (documentType) => {
     setDocumentPreferences((prev) => toggleFavoriteDocument(prev, documentType));
   };
+
+  useEffect(() => {
+    if (initializedFromQueryRef.current) {
+      return;
+    }
+    initializedFromQueryRef.current = true;
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const doc = params.get("doc");
+    if (!doc || !getDocumentById(doc)) {
+      return;
+    }
+
+    startDocument(doc, { useCommonProfile: false });
+  }, [activeProfile, startDocument]);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#d8e9ff_0%,#f5f8fc_45%,#eff3f9_100%)] text-slate-900">
