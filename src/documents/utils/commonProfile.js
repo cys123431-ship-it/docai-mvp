@@ -21,7 +21,7 @@ const createCommonProfile = (id, label) => ({
 export const createDefaultCommonProfileState = () => ({
   activeProfileId: DEFAULT_ACTIVE_PROFILE_ID,
   persistSensitive: false,
-  profiles: [createCommonProfile("personal", "Personal"), createCommonProfile("work", "Work")],
+  profiles: [createCommonProfile("personal", "개인용"), createCommonProfile("work", "업무용")],
 });
 
 const COMMON_PROFILE_FIELD_MAP = {
@@ -48,67 +48,58 @@ const COMMON_PROFILE_FIELD_MAP = {
     borrowerAddress: "address",
   },
   "freelance-service-contract": {
-    partnerAName: "name",
-    partnerAAddress: "address",
+    contractorName: "name",
+    contractorAddress: "address",
   },
   "employment-certificate": {
-    complainantName: "name",
-    complainantPhone: "phone",
-    complainantAddress: "address",
+    employeeName: "name",
   },
   "career-certificate": {
-    taxpayerName: "name",
-    address: "address",
-    residentId: "residentId",
+    employeeName: "name",
   },
   "severance-request": {
-    claimantName: "name",
-    phone: "phone",
-    email: "email",
-    residentId: "residentId",
+    employeeName: "name",
   },
   "wage-arrears-notice": {
-    currentName: "name",
-    contact: "phone",
-    address: "address",
-    residentId: "residentId",
+    senderName: "name",
+    senderContact: "phone",
+    senderAddress: "address",
   },
   "lease-termination-notice": {
-    tenantName: "name",
-    tenantAddress: "address",
+    senderName: "name",
+    senderContact: "phone",
   },
   "rent-arrears-demand": {
-    lesseeName: "name",
-    storeAddress: "address",
+    senderName: "name",
+    senderContact: "phone",
   },
   "deposit-return-confirmation": {
-    principalName: "name",
-    principalAddress: "address",
-    principalContact: "phone",
+    tenantName: "name",
   },
   "settlement-agreement": {
     partyAName: "name",
     partyAAddress: "address",
   },
   "debt-repayment-commitment": {
-    guardianName: "name",
-    guardianAddress: "address",
-    guardianContact: "phone",
+    debtorName: "name",
+    debtorAddress: "address",
   },
   "payment-order-application": {
     applicantName: "name",
-    applicantAddress: "address",
   },
   "power-of-attorney": {
     principalName: "name",
     principalAddress: "address",
+    principalContact: "phone",
   },
   "statement-of-fact": {
-    husbandName: "name",
-    husbandAddress: "address",
+    authorName: "name",
   },
   "personal-info-consent": {
-    representativeName: "name",
+    dataSubjectName: "name",
+  },
+  nda: {
+    receivingParty: "name",
   },
 };
 
@@ -135,7 +126,7 @@ const normalizeState = (state) => {
   const fallbackMap = Object.fromEntries(fallback.profiles.map((profile) => [profile.id, profile]));
   const inputProfiles = Array.isArray(state?.profiles) ? state.profiles : fallback.profiles;
   const normalizedProfiles = inputProfiles.map((profile) =>
-    normalizeProfile(profile, fallbackMap[profile?.id] ?? createCommonProfile(profile?.id ?? "custom", "User")),
+    normalizeProfile(profile, fallbackMap[profile?.id] ?? createCommonProfile(profile?.id ?? "custom", "사용자")),
   );
 
   const knownIds = new Set(normalizedProfiles.map((profile) => profile.id));
