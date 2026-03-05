@@ -1,3 +1,5 @@
+import { getStorageItem, removeStorageItem, setStorageItem } from "./storage";
+
 const DOCUMENT_PREFERENCES_STORAGE_KEY = "docai_document_preferences_v1";
 const MAX_RECENT_DOCUMENTS = 8;
 
@@ -15,11 +17,7 @@ const safeJsonParse = (rawValue) => {
 };
 
 export const loadDocumentPreferences = () => {
-  if (typeof window === "undefined") {
-    return createDefaultPreferences();
-  }
-
-  const raw = window.localStorage.getItem(DOCUMENT_PREFERENCES_STORAGE_KEY);
+  const raw = getStorageItem(DOCUMENT_PREFERENCES_STORAGE_KEY);
   if (!raw) {
     return createDefaultPreferences();
   }
@@ -32,11 +30,7 @@ export const loadDocumentPreferences = () => {
 };
 
 export const saveDocumentPreferences = (preferences) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
+  setStorageItem(
     DOCUMENT_PREFERENCES_STORAGE_KEY,
     JSON.stringify({
       favorites: [...(preferences?.favorites ?? [])],
@@ -70,9 +64,5 @@ export const pushRecentDocument = (preferences, documentType) => {
 };
 
 export const clearDocumentPreferences = () => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.removeItem(DOCUMENT_PREFERENCES_STORAGE_KEY);
+  removeStorageItem(DOCUMENT_PREFERENCES_STORAGE_KEY);
 };
-

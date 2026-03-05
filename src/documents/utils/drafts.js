@@ -1,3 +1,5 @@
+import { getStorageItem, getStorageKeys, removeStorageItem, setStorageItem } from "./storage";
+
 const DRAFT_STORAGE_PREFIX = "docai_draft_v1_";
 
 const getDraftStorageKey = (documentType) => `${DRAFT_STORAGE_PREFIX}${documentType}`;
@@ -11,7 +13,7 @@ const safeJsonParse = (rawValue) => {
 };
 
 export const saveDocumentDraft = (documentType, formData, stepIndex) => {
-  if (typeof window === "undefined" || !documentType) {
+  if (!documentType) {
     return;
   }
 
@@ -21,15 +23,15 @@ export const saveDocumentDraft = (documentType, formData, stepIndex) => {
     stepIndex: Number.isInteger(stepIndex) ? stepIndex : 0,
     updatedAt: Date.now(),
   };
-  window.localStorage.setItem(getDraftStorageKey(documentType), JSON.stringify(payload));
+  setStorageItem(getDraftStorageKey(documentType), JSON.stringify(payload));
 };
 
 export const loadDocumentDraft = (documentType) => {
-  if (typeof window === "undefined" || !documentType) {
+  if (!documentType) {
     return null;
   }
 
-  const raw = window.localStorage.getItem(getDraftStorageKey(documentType));
+  const raw = getStorageItem(getDraftStorageKey(documentType));
   if (!raw) {
     return null;
   }
@@ -48,24 +50,13 @@ export const loadDocumentDraft = (documentType) => {
 };
 
 export const clearDocumentDraft = (documentType) => {
-  if (typeof window === "undefined" || !documentType) {
+  if (!documentType) {
     return;
   }
-  window.localStorage.removeItem(getDraftStorageKey(documentType));
+  removeStorageItem(getDraftStorageKey(documentType));
 };
 
 export const clearAllDocumentDrafts = () => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const keysToDelete = [];
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index);
-    if (key?.startsWith(DRAFT_STORAGE_PREFIX)) {
-      keysToDelete.push(key);
-    }
-  }
-  keysToDelete.forEach((key) => window.localStorage.removeItem(key));
+  const keysToDelete = getStorageKeys().filter((key) => key.startsWith(DRAFT_STORAGE_PREFIX));
+  keysToDelete.forEach((key) => removeStorageItem(key));
 };
-

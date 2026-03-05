@@ -1,3 +1,5 @@
+import { getStorageItem, removeStorageItem, setStorageItem } from "./storage";
+
 const USAGE_METRICS_STORAGE_KEY = "docai_usage_metrics_v1";
 const METRIC_TYPES = ["starts", "completes", "downloads"];
 
@@ -22,11 +24,7 @@ const safeJsonParse = (rawValue) => {
 };
 
 export const loadUsageMetrics = () => {
-  if (typeof window === "undefined") {
-    return createEmptyUsageMetrics();
-  }
-
-  const raw = window.localStorage.getItem(USAGE_METRICS_STORAGE_KEY);
+  const raw = getStorageItem(USAGE_METRICS_STORAGE_KEY);
   if (!raw) {
     return createEmptyUsageMetrics();
   }
@@ -43,10 +41,7 @@ export const loadUsageMetrics = () => {
 };
 
 export const saveUsageMetrics = (metrics) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.setItem(USAGE_METRICS_STORAGE_KEY, JSON.stringify(metrics));
+  setStorageItem(USAGE_METRICS_STORAGE_KEY, JSON.stringify(metrics));
 };
 
 export const recordUsageMetric = (metrics, metricType, documentType) => {
@@ -71,8 +66,5 @@ export const recordUsageMetric = (metrics, metricType, documentType) => {
 };
 
 export const clearUsageMetrics = () => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.removeItem(USAGE_METRICS_STORAGE_KEY);
+  removeStorageItem(USAGE_METRICS_STORAGE_KEY);
 };

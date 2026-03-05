@@ -29,6 +29,7 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome, on
   const [isSaving, setIsSaving] = useState(false);
   const [TemplateComponent, setTemplateComponent] = useState(null);
   const [templateError, setTemplateError] = useState("");
+  const [downloadError, setDownloadError] = useState("");
   const definition = getDocumentById(documentType);
   const today = useMemo(() => getTodayKor(), []);
 
@@ -67,9 +68,11 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome, on
   const downloadPdf = async () => {
     const target = document.getElementById("pdf-document");
     if (!target || !TemplateComponent) {
+      setDownloadError("미리보기가 준비된 뒤 다시 시도해주세요.");
       return;
     }
 
+    setDownloadError("");
     setIsSaving(true);
     try {
       const { default: html2pdf } = await import("html2pdf.js");
@@ -85,6 +88,8 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome, on
         })
         .save();
       onDownload?.();
+    } catch {
+      setDownloadError("PDF 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsSaving(false);
     }
@@ -124,6 +129,7 @@ export default function DocumentPreview({ documentType, data, onEdit, onHome, on
           <Download size={18} />
           {isSaving ? "PDF 생성 중..." : "PDF로 다운로드"}
         </button>
+        {downloadError ? <p className="text-sm font-medium text-red-500">{downloadError}</p> : null}
 
         <button
           type="button"

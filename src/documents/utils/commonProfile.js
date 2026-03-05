@@ -1,3 +1,5 @@
+import { getStorageItem, removeStorageItem, setStorageItem } from "./storage";
+
 export const COMMON_PROFILE_STORAGE_KEY = "docai_common_profile_state_v2";
 
 const DEFAULT_ACTIVE_PROFILE_ID = "personal";
@@ -201,12 +203,8 @@ export const updateCommonProfileData = (state, profileId, updater) => {
 export const resetCommonProfiles = () => createDefaultCommonProfileState();
 
 export const loadCommonProfileStateFromStorage = () => {
-  if (typeof window === "undefined") {
-    return createDefaultCommonProfileState();
-  }
-
   try {
-    const raw = window.localStorage.getItem(COMMON_PROFILE_STORAGE_KEY);
+    const raw = getStorageItem(COMMON_PROFILE_STORAGE_KEY);
     if (!raw) {
       return createDefaultCommonProfileState();
     }
@@ -217,10 +215,6 @@ export const loadCommonProfileStateFromStorage = () => {
 };
 
 export const saveCommonProfileStateToStorage = (state) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
   const normalized = normalizeState(state);
   const payload = {
     ...normalized,
@@ -230,12 +224,9 @@ export const saveCommonProfileStateToStorage = (state) => {
     })),
   };
 
-  window.localStorage.setItem(COMMON_PROFILE_STORAGE_KEY, JSON.stringify(payload));
+  setStorageItem(COMMON_PROFILE_STORAGE_KEY, JSON.stringify(payload));
 };
 
 export const clearCommonProfileStateStorage = () => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.removeItem(COMMON_PROFILE_STORAGE_KEY);
+  removeStorageItem(COMMON_PROFILE_STORAGE_KEY);
 };
